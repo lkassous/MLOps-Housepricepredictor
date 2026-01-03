@@ -63,6 +63,7 @@ jobs:
           name: mlflow-data
           path: mlruns/
           retention-days: 30
+          if-no-files-found: warn
       
       # 7. Upload pipeline report
       - name: Upload pipeline report
@@ -72,6 +73,7 @@ jobs:
           name: pipeline-report
           path: pipeline_report.json
           retention-days: 30
+          if-no-files-found: warn
       
       # 8. Build Docker image (optional - remove if not deploying to Cloud Run)
       - name: Setup Google Cloud SDK
@@ -144,7 +146,6 @@ jobs:
         run: |
           echo "❌ MLOps Pipeline failed!"
           echo "Check the logs above for details"
-          exit 1
 
   # Optional: Trigger model registry update
   update-registry:
