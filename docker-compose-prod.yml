@@ -1,0 +1,44 @@
+version: '3.8'
+
+services:
+  # API MLflow pour serving
+  mlflow-api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: house-prices-api
+    ports:
+      - "8080:8080"
+    environment:
+      - PORT=8080
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    restart: unless-stopped
+    networks:
+      - mlops-network
+
+  # MLflow UI (optionnel - pour visualisation locale)
+  mlflow-ui:
+    build:
+      context: .
+      dockerfile: Dockerfile.mlflow-ui
+    container_name: mlflow-ui
+    ports:
+      - "5000:5000"
+    environment:
+      - MLFLOW_BACKEND_STORE_URI=sqlite:////mlruns.db
+    volumes:
+      - ./mlruns:/mlruns
+    command: ["mlflow", "ui", "--host", "0.0.0.0", "--port", "5000", "--backend-store-uri", "/mlruns"]
+    networks:
+      - mlops-network
+    depends_on:
+      - mlflow-api
+
+networks:
+  mlops-network:
+    driver: bridge

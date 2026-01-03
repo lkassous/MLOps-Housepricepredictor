@@ -1,0 +1,15 @@
+FROM python:3.11-slim
+
+WORKDIR /app
+
+# Install MLflow and dependencies
+RUN pip install --no-cache-dir mlflow==2.19.0
+
+# Expose MLflow UI port
+EXPOSE 5000
+
+# Default environment variables
+ENV MLFLOW_BACKEND_STORE_URI=sqlite:////app/mlflow.db
+
+# Run MLflow UI
+CMD ["mlflow", "ui", "--host", "0.0.0.0", "--port", "5000", "--backend-store-uri", "sqlite:////app/mlflow.db"]

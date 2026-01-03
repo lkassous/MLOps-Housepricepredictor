@@ -1,0 +1,45 @@
+# Ignore Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Ignore virtual environments
+venv/
+env/
+ENV/
+
+# Ignore Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+
+# Ignore MLflow artifacts
+mlruns/
+.mlflow/
+
+# Model artifacts
+model_artifacts/
+*.pkl
+*.joblib
+
+# Data (keep train.csv and test.csv)
+*.csv.bak
+*.csv.old
+
+# Reports & outputs
+pipeline_output/
+pipeline_report.json
+*.html
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Logs
+*.log
+logs/

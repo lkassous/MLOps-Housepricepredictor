@@ -1,0 +1,92 @@
+# MLOps Pipeline Configuration
+# House Price Prediction
+
+# Data Configuration
+data:
+  target_column: "SalePrice"
+  test_size: 0.2
+  random_state: 42
+
+# Categorical columns (43 in this dataset)
+categorical_columns:
+  - "MSZoning"
+  - "Street"
+  - "Alley"
+  - "LotShape"
+  - "LandContour"
+  - "Utilities"
+  - "LotConfig"
+  - "LandSlope"
+  - "Neighborhood"
+  - "Condition1"
+  - "Condition2"
+  - "BldgType"
+  - "HouseStyle"
+  - "RoofStyle"
+  - "RoofMatl"
+  - "Exterior1st"
+  - "Exterior2nd"
+  - "MasVnrType"
+  - "ExterQual"
+  - "ExterCond"
+  - "Foundation"
+  - "BsmtQual"
+  - "BsmtCond"
+  - "BsmtExposure"
+  - "BsmtFinType1"
+  - "BsmtFinType2"
+  - "Heating"
+  - "HeatingQC"
+  - "CentralAir"
+  - "Electrical"
+  - "KitchenQual"
+  - "Functional"
+  - "FireplaceQu"
+  - "GarageType"
+  - "GarageFinish"
+  - "GarageQual"
+  - "GarageCond"
+  - "PavedDrive"
+  - "PoolQC"
+  - "Fence"
+  - "MiscFeature"
+  - "SaleType"
+  - "SaleCondition"
+
+# Model Configuration
+models:
+  linear_regression:
+    enabled: true
+    name: "LinearRegression"
+  
+  random_forest:
+    enabled: true
+    name: "RandomForest"
+    hyperparameters:
+      n_estimators: 100
+      max_depth: 10
+      random_state: 42
+  
+  xgboost:
+    enabled: true
+    name: "XGBoost"
+    hyperparameters:
+      n_estimators: 300
+      max_depth: 3
+      learning_rate: 0.1
+      random_state: 42
+
+# MLflow Configuration
+mlflow:
+  experiment_name: "House-Prices-Production-Pipeline"
+  model_registry_name: "HousePricesPredictor"
+  backend_store_uri: "./mlruns"
+  production_alias: "production"
+  min_r2_threshold: 0.80  # Minimum R² to promote to production
+
+# Pipeline Configuration
+pipeline:
+  verbose: true
+  generate_report: true
+  save_artifacts: true
+  output_directory: "./pipeline_output"

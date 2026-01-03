@@ -1,0 +1,120 @@
+{
+  "schema": {
+    "description": "Data schema for House Price Prediction dataset",
+    "dataset_name": "House Prices - Advanced Regression Techniques",
+    "target_variable": "SalePrice",
+    "target_type": "continuous",
+    "features": {
+      "numeric": {
+        "count": 36,
+        "examples": [
+          "LotFrontage",
+          "LotArea",
+          "OverallQual",
+          "OverallCond",
+          "YearBuilt",
+          "YearRemodAdd",
+          "MasVnrArea",
+          "BsmtFinSF1",
+          "BsmtFinSF2",
+          "BsmtUnfSF",
+          "TotalBsmtSF",
+          "1stFlrSF",
+          "2ndFlrSF",
+          "LowQualFinSF",
+          "GrLivArea",
+          "BsmtFullBath",
+          "BsmtHalfBath",
+          "FullBath",
+          "HalfBath",
+          "BedroomAbvGr",
+          "KitchenAbvGr",
+          "TotRmsAbvGrd",
+          "Fireplaces",
+          "GarageYrBlt",
+          "GarageCars",
+          "GarageArea",
+          "WoodDeckSF",
+          "OpenPorchSF",
+          "EnclosedPorch",
+          "3SsnPorch",
+          "ScreenPorch",
+          "PoolArea",
+          "MiscVal",
+          "MoSold",
+          "YrSold",
+          "Id"
+        ]
+      },
+      "categorical": {
+        "count": 43,
+        "examples": [
+          "MSZoning",
+          "Street",
+          "Alley",
+          "LotShape",
+          "LandContour",
+          "Utilities",
+          "LotConfig",
+          "LandSlope",
+          "Neighborhood",
+          "Condition1",
+          "Condition2",
+          "BldgType",
+          "HouseStyle",
+          "RoofStyle",
+          "RoofMatl",
+          "Exterior1st",
+          "Exterior2nd",
+          "MasVnrType",
+          "ExterQual",
+          "ExterCond",
+          "Foundation",
+          "BsmtQual",
+          "BsmtCond",
+          "BsmtExposure",
+          "BsmtFinType1",
+          "BsmtFinType2",
+          "Heating",
+          "HeatingQC",
+          "CentralAir",
+          "Electrical",
+          "KitchenQual",
+          "Functional",
+          "FireplaceQu",
+          "GarageType",
+          "GarageFinish",
+          "GarageQual",
+          "GarageCond",
+          "PavedDrive",
+          "PoolQC",
+          "Fence",
+          "MiscFeature",
+          "SaleType",
+          "SaleCondition"
+        ]
+      }
+    },
+    "data_types": {
+      "numeric": "int64, float64",
+      "categorical": "object (string)"
+    },
+    "required_columns": [
+      "Id",
+      "SalePrice"
+    ],
+    "validation_rules": {
+      "missing_values": "Handled with median (numeric) and mode (categorical)",
+      "duplicates": "Removed from training set",
+      "outliers": "Not removed, handled by models",
+      "scaling": "Not applied (tree-based models are scale-invariant)"
+    },
+    "data_size": {
+      "samples": 1460,
+      "features": 79,
+      "train_test_split": "80/20"
+    },
+    "version": "1.0",
+    "last_updated": "2026-01-04"
+  }
+}

@@ -1,0 +1,184 @@
+name: MLOps Pipeline - House Prices
+
+on:
+  # Trigger on CSV file push to main branch
+  push:
+    branches:
+      - main
+    paths:
+      - 'train.csv'
+      - 'pipeline.py'
+      - 'requirements.txt'
+      - '.github/workflows/mlops-pipeline.yml'
+  
+  # Manual trigger via GitHub UI
+  workflow_dispatch:
+
+jobs:
+  pipeline:
+    name: Run MLOps Pipeline
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    
+    steps:
+      # 1. Checkout code
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      # 2. Setup Python
+      - name: Setup Python 3.11
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+      
+      # 3. Install dependencies
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+      
+      # 4. Run MLOps Pipeline
+      - name: Run MLOps Pipeline
+        run: |
+          echo "🚀 Starting MLOps Pipeline..."
+          python pipeline.py --data-path train.csv --output-path ./mlruns
+          echo "✅ Pipeline completed successfully"
+      
+      # 5. Generate artifacts
+      - name: Generate artifacts
+        if: always()
+        run: |
+          echo "📦 Generating artifacts..."
+          mkdir -p pipeline_artifacts
+          cp -r mlruns pipeline_artifacts/ 2>/dev/null || true
+          cp pipeline_report.json pipeline_artifacts/ 2>/dev/null || true
+          ls -la pipeline_artifacts/
+      
+      # 6. Upload MLflow artifacts
+      - name: Upload MLflow artifacts
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: mlflow-data
+          path: mlruns/
+          retention-days: 30
+      
+      # 7. Upload pipeline report
+      - name: Upload pipeline report
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: pipeline-report
+          path: pipeline_report.json
+          retention-days: 30
+      
+      # 8. Build Docker image (optional - remove if not deploying to Cloud Run)
+      - name: Setup Google Cloud SDK
+        if: github.event_name == 'push' && success()
+        uses: google-github-actions/setup-gcloud@v1
+        with:
+          service_account_key: ${{ secrets.GCP_SA_KEY }}
+          project_id: ${{ secrets.GCP_PROJECT_ID }}
+      
+      # 9. Configure Docker for GCR
+      - name: Configure Docker for GCR
+        if: github.event_name == 'push' && success()
+        run: |
+          gcloud auth configure-docker gcr.io
+      
+      # 10. Build and push Docker image
+      - name: Build and push Docker image
+        if: github.event_name == 'push' && success()
+        run: |
+          IMAGE_NAME="gcr.io/${{ secrets.GCP_PROJECT_ID }}/house-prices-api:latest"
+          IMAGE_TAG="gcr.io/${{ secrets.GCP_PROJECT_ID }}/house-prices-api:$(date +%s)"
+          
+          echo "🐳 Building Docker image..."
+          docker build -t $IMAGE_NAME -t $IMAGE_TAG .
+          
+          echo "📤 Pushing to Google Container Registry..."
+          docker push $IMAGE_NAME
+          docker push $IMAGE_TAG
+          
+          echo "✅ Docker image pushed: $IMAGE_NAME"
+      
+      # 11. Deploy to Cloud Run
+      - name: Deploy to Cloud Run
+        if: github.event_name == 'push' && success()
+        run: |
+          SERVICE_NAME="house-prices-predictor"
+          REGION="us-central1"
+          IMAGE_URL="gcr.io/${{ secrets.GCP_PROJECT_ID }}/house-prices-api:latest"
+          
+          echo "🚀 Deploying to Cloud Run..."
+          gcloud run deploy $SERVICE_NAME \
+            --image=$IMAGE_URL \
+            --region=$REGION \
+            --platform=managed \
+            --allow-unauthenticated \
+            --port=8080 \
+            --memory=512Mi \
+            --timeout=300
+          
+          echo "✅ Deployment completed"
+          
+          SERVICE_URL=$(gcloud run services describe $SERVICE_NAME \
+            --region=$REGION \
+            --format='value(status.url)')
+          
+          echo "🌐 Service URL: $SERVICE_URL"
+      
+      # 12. Notify on success
+      - name: Notify success
+        if: success()
+        run: |
+          echo "✅ MLOps Pipeline completed successfully!"
+          echo "📊 Pipeline artifacts uploaded to GitHub"
+          echo "🐳 Docker image pushed to Google Container Registry"
+          echo "🚀 Service deployed to Cloud Run"
+      
+      # 13. Notify on failure
+      - name: Notify failure
+        if: failure()
+        run: |
+          echo "❌ MLOps Pipeline failed!"
+          echo "Check the logs above for details"
+          exit 1
+
+  # Optional: Trigger model registry update
+  update-registry:
+    name: Update MLflow Registry
+    needs: pipeline
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && success()
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+      
+      - name: Install MLflow
+        run: |
+          pip install mlflow==3.8.1
+      
+      - name: Download artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: mlflow-data
+          path: mlruns/
+      
+      - name: Verify model registration
+        run: |
+          echo "🔍 Checking MLflow Registry..."
+          # This would connect to your MLflow server
+          # For now, just verify the artifacts were generated
+          if [ -d "mlruns" ]; then
+            echo "✅ MLflow artifacts available"
+            find mlruns -name "*.pkl" | head -5
+          fi

@@ -1,0 +1,49 @@
+version: '3.8'
+
+services:
+  mlflow:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: mlflow-house-prices
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./mlruns:/app/mlruns
+      - ./models:/app/models
+      - ./src:/app/src
+      - ./notebooks:/app/notebooks
+      - ./train.csv:/app/train.csv
+      - ./test.csv:/app/test.csv
+      - ./data_description.txt:/app/data_description.txt
+      - ./sample_submission.csv:/app/sample_submission.csv
+    environment:
+      - MLFLOW_TRACKING_URI=/app/mlruns
+    command: mlflow ui --host 0.0.0.0 --port 5000
+    networks:
+      - mlops-network
+
+  training:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: mlflow-training
+    depends_on:
+      - mlflow
+    volumes:
+      - ./mlruns:/app/mlruns
+      - ./models:/app/models
+      - ./src:/app/src
+      - ./train.csv:/app/train.csv
+      - ./test.csv:/app/test.csv
+      - ./data_description.txt:/app/data_description.txt
+      - ./sample_submission.csv:/app/sample_submission.csv
+    environment:
+      - MLFLOW_TRACKING_URI=http://mlflow:5000
+    command: tail -f /dev/null  # Keep container running
+    networks:
+      - mlops-network
+
+networks:
+  mlops-network:
+    driver: bridge
