@@ -58,7 +58,7 @@ jobs:
       # 6. Upload MLflow artifacts
       - name: Upload MLflow artifacts
         if: always()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: mlflow-data
           path: mlruns/
@@ -67,7 +67,7 @@ jobs:
       # 7. Upload pipeline report
       - name: Upload pipeline report
         if: always()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: pipeline-report
           path: pipeline_report.json
@@ -168,7 +168,7 @@ jobs:
           pip install mlflow==3.8.1
       
       - name: Download artifacts
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: mlflow-data
           path: mlruns/
