@@ -36,8 +36,12 @@ RUN useradd -m -u 1000 mlops && \
 COPY --chown=mlops:mlops app.py .
 COPY --chown=mlops:mlops train_simple_model.py .
 COPY --chown=mlops:mlops train.csv .
+COPY --chown=mlops:mlops static/ ./static/
 
-# Entraîner le modèle pendant le build
+# Créer le dossier model_artifacts
+RUN mkdir -p model_artifacts
+
+# Entraîner le modèle pendant le build (génère model_artifacts/)
 RUN python train_simple_model.py
 
 # Variables d'environnement

@@ -28,7 +28,10 @@ model_artifacts/
 # Reports & outputs
 pipeline_output/
 pipeline_report.json
-*.html
+# Keep static html files for web interface
+!static/*.html
+!static/*.css
+!static/*.js
 
 # OS files
 .DS_Store
