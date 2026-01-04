@@ -75,23 +75,29 @@ jobs:
           retention-days: 30
           if-no-files-found: warn
       
-      # 8. Build Docker image (optional - remove if not deploying to Cloud Run)
-      - name: Setup Google Cloud SDK
-        if: github.event_name == 'push' && success()
-        uses: google-github-actions/setup-gcloud@v1
+      # 8. Authenticate to Google Cloud
+      - name: Authenticate to Google Cloud
+        if: success()
+        uses: google-github-actions/auth@v2
         with:
-          service_account_key: ${{ secrets.GCP_SA_KEY }}
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+      
+      # 9. Setup Google Cloud SDK
+      - name: Setup Google Cloud SDK
+        if: success()
+        uses: google-github-actions/setup-gcloud@v2
+        with:
           project_id: ${{ secrets.GCP_PROJECT_ID }}
       
-      # 9. Configure Docker for GCR
+      # 10. Configure Docker for GCR
       - name: Configure Docker for GCR
-        if: github.event_name == 'push' && success()
+        if: success()
         run: |
           gcloud auth configure-docker gcr.io
       
-      # 10. Build and push Docker image
+      # 11. Build and push Docker image
       - name: Build and push Docker image
-        if: github.event_name == 'push' && success()
+        if: success()
         run: |
           IMAGE_NAME="gcr.io/${{ secrets.GCP_PROJECT_ID }}/house-prices-api:latest"
           IMAGE_TAG="gcr.io/${{ secrets.GCP_PROJECT_ID }}/house-prices-api:$(date +%s)"
@@ -105,9 +111,9 @@ jobs:
           
           echo "✅ Docker image pushed: $IMAGE_NAME"
       
-      # 11. Deploy to Cloud Run
+      # 12. Deploy to Cloud Run
       - name: Deploy to Cloud Run
-        if: github.event_name == 'push' && success()
+        if: success()
         run: |
           SERVICE_NAME="house-prices-predictor"
           REGION="us-central1"
@@ -120,7 +126,7 @@ jobs:
             --platform=managed \
             --allow-unauthenticated \
             --port=8080 \
-            --memory=512Mi \
+            --memory=1Gi \
             --timeout=300
           
           echo "✅ Deployment completed"
@@ -131,7 +137,7 @@ jobs:
           
           echo "🌐 Service URL: $SERVICE_URL"
       
-      # 12. Notify on success
+      # 13. Notify on success
       - name: Notify success
         if: success()
         run: |
@@ -140,7 +146,7 @@ jobs:
           echo "🐳 Docker image pushed to Google Container Registry"
           echo "🚀 Service deployed to Cloud Run"
       
-      # 13. Notify on failure
+      # 14. Notify on failure
       - name: Notify failure
         if: failure()
         run: |
