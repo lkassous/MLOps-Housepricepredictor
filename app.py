@@ -4,7 +4,8 @@ API RESTful avec endpoints pour prédictions, health check, et model info
 """
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, HTMLResponse, FileResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 from typing import List, Dict, Optional
 import mlflow
@@ -13,6 +14,7 @@ import pandas as pd
 import numpy as np
 import logging
 import time
+import json
 from datetime import datetime
 import uvicorn
 import os
@@ -40,6 +42,11 @@ app = FastAPI(
     docs_url="/docs",
     redoc_url="/redoc"
 )
+
+# Mount static files
+static_path = os.path.join(os.path.dirname(__file__), "static")
+if os.path.exists(static_path):
+    app.mount("/static", StaticFiles(directory=static_path), name="static")
 
 # CORS middleware
 app.add_middleware(
@@ -172,10 +179,11 @@ class ModelInfoResponse(BaseModel):
 # Variables globales pour monitoring
 start_time = time.time()
 prediction_count = 0
+comparison_results = {}
 
 def load_model():
     """Charge le modèle depuis model_artifacts (fallback sur pickle)"""
-    global model, model_info, label_encoders, feature_names
+    global model, model_info, label_encoders, feature_names, comparison_results
     
     try:
         import pickle
@@ -192,17 +200,40 @@ def load_model():
         with open('model_artifacts/feature_names.pkl', 'rb') as f:
             feature_names = pickle.load(f)
         
+        # Charger les infos du modèle
+        model_info_path = 'model_artifacts/model_info.json'
+        if os.path.exists(model_info_path):
+            with open(model_info_path, 'r') as f:
+                saved_info = json.load(f)
+            model_info = {
+                "model_name": saved_info.get('model_name', 'Unknown'),
+                "model_type": saved_info.get('model_type', 'Unknown'),
+                "model_version": "1.0",
+                "loaded_at": datetime.now().isoformat(),
+                "trained_at": saved_info.get('timestamp', 'Unknown'),
+                "load_method": "pickle_artifacts",
+                "n_features": len(feature_names)
+            }
+        else:
+            model_info = {
+                "model_name": "Production-Model",
+                "model_version": "1.0",
+                "loaded_at": datetime.now().isoformat(),
+                "load_method": "pickle_artifacts",
+                "n_features": len(feature_names)
+            }
+        
+        # Charger les résultats de comparaison
+        comparison_path = 'model_artifacts/comparison_results.json'
+        if os.path.exists(comparison_path):
+            with open(comparison_path, 'r') as f:
+                comparison_results = json.load(f)
+            logger.info(f"Comparison results loaded: Best model = {comparison_results.get('best_model')}")
+        
         logger.info("Modèle chargé depuis model_artifacts/")
+        logger.info(f"Model name: {model_info.get('model_name')}")
         logger.info(f"Label encoders: {len(label_encoders)} colonnes")
         logger.info(f"Features: {len(feature_names)}")
-        
-        model_info = {
-            "model_name": "XGBoost-Production",
-            "model_version": "1.0",
-            "loaded_at": datetime.now().isoformat(),
-            "load_method": "pickle_artifacts",
-            "n_features": len(feature_names)
-        }
         
         logger.info(f"Modèle chargé avec succès: {model_info}")
         return True
@@ -240,28 +271,54 @@ async def log_requests(request: Request, call_next):
     
     return response
 
-@app.get("/", tags=["General"])
+@app.get("/", tags=["General"], response_class=HTMLResponse)
 async def root():
-    """Page d'accueil de l'API"""
-    return {
+    """Page d'accueil avec interface web moderne"""
+    static_index = os.path.join(os.path.dirname(__file__), "static", "index.html")
+    
+    # Si le fichier index.html existe, le servir
+    if os.path.exists(static_index):
+        with open(static_index, 'r', encoding='utf-8') as f:
+            return HTMLResponse(content=f.read())
+    
+    # Sinon, retourner le JSON de l'API
+    return JSONResponse({
         "message": "House Price Prediction API",
         "version": "1.0.0",
         "docs": "/docs",
         "health": "/health",
-        "model_info": "/model-info"
-    }
+        "model_info": "/model-info",
+        "web_ui": "Install static files to see web interface"
+    })
 
-@app.get("/health", response_model=HealthResponse, tags=["Monitoring"])
+@app.get("/health", tags=["Monitoring"])
 async def health_check():
     """Health check pour vérifier l'état du service"""
     uptime = time.time() - start_time
     
-    return HealthResponse(
-        status="healthy" if model is not None else "unhealthy",
-        model_loaded=model is not None,
-        model_name=MODEL_NAME,
-        uptime_seconds=uptime
-    )
+    return {
+        "status": "healthy",
+        "model_loaded": model is not None,
+        "model_name": model_info.get('model_name', MODEL_NAME) if model_info else MODEL_NAME,
+        "uptime_seconds": int(uptime),
+        "timestamp": datetime.now().isoformat(),
+        "version": "1.0.0"
+    }
+
+@app.get("/comparison", tags=["Model"])
+async def get_comparison_results():
+    """Récupère les résultats de comparaison des modèles du dernier pipeline run"""
+    if not comparison_results:
+        # Try to load from file if not in memory
+        comparison_path = 'model_artifacts/comparison_results.json'
+        if os.path.exists(comparison_path):
+            with open(comparison_path, 'r') as f:
+                return json.load(f)
+        return {
+            "error": "No comparison results available",
+            "message": "Run the pipeline first to generate comparison data"
+        }
+    return comparison_results
 
 @app.get("/model-info", response_model=ModelInfoResponse, tags=["Model"])
 async def get_model_info():

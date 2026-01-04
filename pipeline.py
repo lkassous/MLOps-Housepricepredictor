@@ -364,6 +364,76 @@ def promote_best_model_to_production(best_model_name: str, run_ids: dict):
 
 
 # ============================================================================
+# SAVE MODEL FOR DEPLOYMENT
+# ============================================================================
+
+def save_best_model_for_deployment(model, model_name: str, label_encoders: dict, 
+                                    feature_names: list, comparison_df: pd.DataFrame):
+    """Save the best model and artifacts for deployment."""
+    import pickle
+    
+    logger.info("\n" + "="*70)
+    logger.info("SAVING MODEL FOR DEPLOYMENT")
+    logger.info("="*70)
+    
+    # Create model_artifacts directory
+    os.makedirs('model_artifacts', exist_ok=True)
+    
+    # Save model
+    model_path = 'model_artifacts/model.pkl'
+    with open(model_path, 'wb') as f:
+        pickle.dump(model, f)
+    logger.info(f"✅ Model saved: {model_path}")
+    
+    # Save label encoders
+    encoders_path = 'model_artifacts/label_encoders.pkl'
+    with open(encoders_path, 'wb') as f:
+        pickle.dump(label_encoders, f)
+    logger.info(f"✅ Label encoders saved: {encoders_path}")
+    
+    # Save feature names
+    features_path = 'model_artifacts/feature_names.pkl'
+    with open(features_path, 'wb') as f:
+        pickle.dump(feature_names, f)
+    logger.info(f"✅ Feature names saved: {features_path}")
+    
+    # Save model info
+    model_info = {
+        'model_name': model_name,
+        'model_type': type(model).__name__,
+        'timestamp': datetime.now().isoformat(),
+        'feature_count': len(feature_names)
+    }
+    info_path = 'model_artifacts/model_info.json'
+    with open(info_path, 'w') as f:
+        json.dump(model_info, f, indent=2)
+    logger.info(f"✅ Model info saved: {info_path}")
+    
+    # Save comparison results for the interface
+    comparison_data = {
+        'best_model': model_name,
+        'timestamp': datetime.now().isoformat(),
+        'models': {}
+    }
+    for idx, row in comparison_df.iterrows():
+        comparison_data['models'][idx] = {
+            'test_r2': float(row['test_r2']),
+            'test_rmse': float(row['test_rmse']),
+            'test_mae': float(row['test_mae']),
+            'cv_mean': float(row['cv_mean']),
+            'cv_std': float(row['cv_std']),
+            'is_best': idx == model_name
+        }
+    
+    comparison_path = 'model_artifacts/comparison_results.json'
+    with open(comparison_path, 'w') as f:
+        json.dump(comparison_data, f, indent=2)
+    logger.info(f"✅ Comparison results saved: {comparison_path}")
+    
+    logger.info(f"\n📦 All artifacts saved to model_artifacts/")
+
+
+# ============================================================================
 # REPORTING
 # ============================================================================
 
@@ -454,7 +524,11 @@ def run_pipeline(data_path: str, output_path: str = './mlruns'):
         # 7. Promote best model
         version = promote_best_model_to_production(best_model, run_ids)
         
-        # 8. Generate report
+        # 8. Save best model to model_artifacts for deployment
+        save_best_model_for_deployment(trained_models[best_model], best_model, 
+                                       label_encoders, feature_names, comparison_df)
+        
+        # 9. Generate report
         report = generate_report(data_validation, comparison_df, best_model, output_path)
         
         logger.info("\n" + "="*70)
@@ -464,6 +538,7 @@ def run_pipeline(data_path: str, output_path: str = './mlruns'):
         logger.info(f"   Best Model: {best_model}")
         logger.info(f"   MLflow Experiment: {MLFLOW_EXPERIMENT_NAME}")
         logger.info(f"   Model Registry: {MODEL_REGISTRY_NAME} v{version}")
+        logger.info(f"   Model saved to: model_artifacts/")
         logger.info(f"\n🌐 Access MLflow UI: mlflow ui --host 0.0.0.0 --port 5000")
         
         return report

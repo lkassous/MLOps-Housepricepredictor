@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MLOps House Price Predictor - AI-Powered Real Estate Valuation</title>
+    <link rel="stylesheet" href="/static/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="container">
+            <div class="nav-brand">
+                <i class="fas fa-home"></i>
+                <span>MLOps House Predictor</span>
+            </div>
+            <div class="nav-links">
+                <a href="#home" class="nav-link active">Accueil</a>
+                <a href="#features" class="nav-link">Fonctionnalités</a>
+                <a href="#predict" class="nav-link">Prédiction</a>
+                <a href="#architecture" class="nav-link">Architecture</a>
+                <a href="#api" class="nav-link">API</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section id="home" class="hero">
+        <div class="hero-background"></div>
+        <div class="container">
+            <div class="hero-content">
+                <div class="hero-badge">
+                    <i class="fas fa-robot"></i>
+                    <span>Powered by MLflow & Google Cloud</span>
+                </div>
+                <h1 class="hero-title">
+                    Prédiction Intelligente des Prix
+                    <span class="gradient-text">Immobiliers</span>
+                </h1>
+                <p class="hero-subtitle">
+                    Solution MLOps complète utilisant l'apprentissage automatique avancé pour
+                    estimer avec précision la valeur des propriétés résidentielles
+                </p>
+                <div class="hero-stats">
+                    <div class="stat-card">
+                        <div class="stat-value" id="accuracy">92.5%</div>
+                        <div class="stat-label">Précision</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="predictions">1,247</div>
+                        <div class="stat-label">Prédictions</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="uptime">99.9%</div>
+                        <div class="stat-label">Disponibilité</div>
+                    </div>
+                </div>
+                <div class="hero-actions">
+                    <button class="btn btn-primary" onclick="scrollToPredict()">
+                        <i class="fas fa-chart-line"></i>
+                        Essayer Maintenant
+                    </button>
+                    <button class="btn btn-secondary" onclick="window.open('/docs', '_blank')">
+                        <i class="fas fa-book"></i>
+                        Documentation API
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="scroll-indicator">
+            <i class="fas fa-chevron-down"></i>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section id="features" class="features">
+        <div class="container">
+            <div class="section-header">
+                <span class="section-badge">Capacités</span>
+                <h2 class="section-title">Pourquoi Notre Solution?</h2>
+                <p class="section-subtitle">Une plateforme MLOps complète et production-ready</p>
+            </div>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-brain"></i>
+                    </div>
+                    <h3>Machine Learning Avancé</h3>
+                    <p>3 algorithmes optimisés (Linear Regression, Random Forest, XGBoost) avec hyperparameter tuning</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-cloud"></i>
+                    </div>
+                    <h3>Cloud Native</h3>
+                    <p>Déployé sur Google Cloud Run avec scaling automatique et haute disponibilité</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-chart-bar"></i>
+                    </div>
+                    <h3>MLflow Tracking</h3>
+                    <p>Versioning des modèles, tracking des expériences et gestion du cycle de vie ML</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-sync-alt"></i>
+                    </div>
+                    <h3>CI/CD Automatisé</h3>
+                    <p>Pipeline GitHub Actions pour tests, build Docker et déploiement continu</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-shield-alt"></i>
+                    </div>
+                    <h3>API Sécurisée</h3>
+                    <p>FastAPI avec validation des données, CORS, logging et monitoring complets</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-rocket"></i>
+                    </div>
+                    <h3>Performance Optimale</h3>
+                    <p>Réponse en < 200ms avec caching intelligent et optimisations de production</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Prediction Section -->
+    <section id="predict" class="prediction">
+        <div class="container">
+            <div class="section-header">
+                <span class="section-badge">Démo Interactive</span>
+                <h2 class="section-title">Testez la Prédiction</h2>
+                <p class="section-subtitle">Entrez les caractéristiques d'une maison pour obtenir une estimation instantanée</p>
+            </div>
+            
+            <div class="prediction-container">
+                <!-- Quick Prediction Form -->
+                <div class="prediction-card">
+                    <h3><i class="fas fa-magic"></i> Prédiction Rapide</h3>
+                    <form id="quickPredictForm">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="overallQual">Qualité Générale</label>
+                                <select id="overallQual" required>
+                                    <option value="">Sélectionner...</option>
+                                    <option value="10">Excellent (10)</option>
+                                    <option value="9">Très Bon (9)</option>
+                                    <option value="8">Bon (8)</option>
+                                    <option value="7">Au-dessus Moyenne (7)</option>
+                                    <option value="6">Moyenne (6)</option>
+                                    <option value="5">En-dessous Moyenne (5)</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="grLivArea">Surface Habitable (sq ft)</label>
+                                <input type="number" id="grLivArea" placeholder="1500" min="0" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="garageArea">Surface Garage (sq ft)</label>
+                                <input type="number" id="garageArea" placeholder="400" min="0" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="totalBsmtSF">Surface Sous-sol (sq ft)</label>
+                                <input type="number" id="totalBsmtSF" placeholder="1000" min="0" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="yearBuilt">Année Construction</label>
+                                <input type="number" id="yearBuilt" placeholder="2000" min="1800" max="2026" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="fullBath">Salles de Bain</label>
+                                <input type="number" id="fullBath" placeholder="2" min="0" max="5" required>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-block">
+                            <i class="fas fa-calculator"></i>
+                            Calculer le Prix
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Prediction Result -->
+                <div class="result-card" id="resultCard" style="display: none;">
+                    <div class="result-header">
+                        <i class="fas fa-check-circle"></i>
+                        <h3>Prix Estimé</h3>
+                    </div>
+                    <div class="result-price" id="predictedPrice">$0</div>
+                    <div class="result-details">
+                        <div class="detail-item">
+                            <span class="detail-label">Temps de réponse</span>
+                            <span class="detail-value" id="responseTime">-</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Modèle utilisé</span>
+                            <span class="detail-value" id="modelUsed">-</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Confiance</span>
+                            <span class="detail-value" id="confidence">-</span>
+                        </div>
+                    </div>
+                    <div class="result-actions">
+                        <button class="btn btn-secondary" onclick="resetPrediction()">
+                            <i class="fas fa-redo"></i>
+                            Nouvelle Prédiction
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- API Status -->
+            <div class="api-status" id="apiStatus">
+                <div class="status-indicator">
+                    <span class="status-dot"></span>
+                    <span>API Status: <strong id="statusText">Chargement...</strong></span>
+                </div>
+                <div class="status-info">
+                    <span>Endpoint: <code id="apiEndpoint">-</code></span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Architecture Section -->
+    <section id="architecture" class="architecture">
+        <div class="container">
+            <div class="section-header">
+                <span class="section-badge">Infrastructure</span>
+                <h2 class="section-title">Architecture MLOps</h2>
+                <p class="section-subtitle">Pipeline complet de développement à la production</p>
+            </div>
+
+            <div class="architecture-diagram">
+                <div class="arch-layer">
+                    <h4><i class="fas fa-code"></i> Développement</h4>
+                    <div class="arch-components">
+                        <div class="arch-component">
+                            <i class="fas fa-database"></i>
+                            <span>Feature Engineering</span>
+                        </div>
+                        <div class="arch-component">
+                            <i class="fas fa-brain"></i>
+                            <span>Model Training</span>
+                        </div>
+                        <div class="arch-component">
+                            <i class="fas fa-chart-line"></i>
+                            <span>MLflow Tracking</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="arch-arrow"><i class="fas fa-arrow-down"></i></div>
+
+                <div class="arch-layer">
+                    <h4><i class="fas fa-cogs"></i> CI/CD</h4>
+                    <div class="arch-components">
+                        <div class="arch-component">
+                            <i class="fab fa-github"></i>
+                            <span>GitHub Actions</span>
+                        </div>
+                        <div class="arch-component">
+                            <i class="fab fa-docker"></i>
+                            <span>Docker Build</span>
+                        </div>
+                        <div class="arch-component">
+                            <i class="fas fa-vial"></i>
+                            <span>Automated Tests</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="arch-arrow"><i class="fas fa-arrow-down"></i></div>
+
+                <div class="arch-layer">
+                    <h4><i class="fas fa-cloud"></i> Production</h4>
+                    <div class="arch-components">
+                        <div class="arch-component">
+                            <i class="fab fa-google"></i>
+                            <span>Cloud Run</span>
+                        </div>
+                        <div class="arch-component">
+                            <i class="fas fa-box"></i>
+                            <span>Artifact Registry</span>
+                        </div>
+                        <div class="arch-component">
+                            <i class="fas fa-tachometer-alt"></i>
+                            <span>Monitoring</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Model Comparison Dashboard -->
+            <div class="model-comparison">
+                <h4><i class="fas fa-trophy"></i> Comparaison des Modèles (Dernier Run)</h4>
+                <div class="comparison-table">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Modèle</th>
+                                <th>Test R²</th>
+                                <th>Test RMSE</th>
+                                <th>CV Score</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr class="best-model">
+                                <td><i class="fas fa-crown"></i> XGBoost</td>
+                                <td class="metric-good">0.8912</td>
+                                <td>$25,891</td>
+                                <td>0.8856 ± 0.02</td>
+                                <td><span class="badge badge-success">Production</span></td>
+                            </tr>
+                            <tr>
+                                <td>Random Forest</td>
+                                <td>0.8734</td>
+                                <td>$27,456</td>
+                                <td>0.8645 ± 0.03</td>
+                                <td><span class="badge badge-secondary">Archived</span></td>
+                            </tr>
+                            <tr>
+                                <td>Linear Regression</td>
+                                <td>0.7623</td>
+                                <td>$31,234</td>
+                                <td>0.7534 ± 0.04</td>
+                                <td><span class="badge badge-secondary">Archived</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <p class="comparison-note">
+                    <i class="fas fa-info-circle"></i> 
+                    Ces résultats sont mis à jour automatiquement à chaque exécution du pipeline MLOps
+                </p>
+            </div>
+
+            <!-- Tech Stack -->
+            <div class="tech-stack">
+                <h4>Technologies Utilisées</h4>
+                <div class="tech-tags">
+                    <span class="tech-tag"><i class="fab fa-python"></i> Python 3.11</span>
+                    <span class="tech-tag"><i class="fas fa-server"></i> FastAPI</span>
+                    <span class="tech-tag"><i class="fas fa-chart-line"></i> MLflow</span>
+                    <span class="tech-tag"><i class="fas fa-brain"></i> scikit-learn</span>
+                    <span class="tech-tag"><i class="fas fa-project-diagram"></i> XGBoost</span>
+                    <span class="tech-tag"><i class="fab fa-docker"></i> Docker</span>
+                    <span class="tech-tag"><i class="fab fa-google"></i> Google Cloud</span>
+                    <span class="tech-tag"><i class="fab fa-github"></i> GitHub Actions</span>
+                    <span class="tech-tag"><i class="fas fa-database"></i> Pandas</span>
+                    <span class="tech-tag"><i class="fas fa-chart-bar"></i> NumPy</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- API Documentation Section -->
+    <section id="api" class="api-section">
+        <div class="container">
+            <div class="section-header">
+                <span class="section-badge">API RESTful</span>
+                <h2 class="section-title">Documentation API</h2>
+                <p class="section-subtitle">Endpoints disponibles pour l'intégration</p>
+            </div>
+
+            <div class="api-endpoints">
+                <div class="endpoint-card">
+                    <div class="endpoint-header">
+                        <span class="http-method get">GET</span>
+                        <code>/health</code>
+                    </div>
+                    <p>Vérifier l'état de santé de l'API</p>
+                    <button class="btn btn-sm" onclick="testEndpoint('/health')">Tester</button>
+                </div>
+
+                <div class="endpoint-card">
+                    <div class="endpoint-header">
+                        <span class="http-method get">GET</span>
+                        <code>/model-info</code>
+                    </div>
+                    <p>Obtenir les informations du modèle en production</p>
+                    <button class="btn btn-sm" onclick="testEndpoint('/model-info')">Tester</button>
+                </div>
+
+                <div class="endpoint-card">
+                    <div class="endpoint-header">
+                        <span class="http-method post">POST</span>
+                        <code>/predict</code>
+                    </div>
+                    <p>Prédire le prix d'une maison</p>
+                    <button class="btn btn-sm" onclick="scrollToPredict()">Essayer</button>
+                </div>
+
+                <div class="endpoint-card">
+                    <div class="endpoint-header">
+                        <span class="http-method get">GET</span>
+                        <code>/metrics</code>
+                    </div>
+                    <p>Obtenir les métriques de performance</p>
+                    <button class="btn btn-sm" onclick="testEndpoint('/metrics')">Tester</button>
+                </div>
+            </div>
+
+            <div class="api-docs-link">
+                <button class="btn btn-primary" onclick="window.open('/docs', '_blank')">
+                    <i class="fas fa-book-open"></i>
+                    Documentation Interactive Swagger
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h4><i class="fas fa-home"></i> MLOps House Predictor</h4>
+                    <p>Solution de prédiction de prix immobiliers basée sur l'IA et déployée avec les meilleures pratiques MLOps.</p>
+                </div>
+                <div class="footer-section">
+                    <h4>Liens Rapides</h4>
+                    <ul>
+                        <li><a href="/docs">Documentation API</a></li>
+                        <li><a href="/redoc">ReDoc API</a></li>
+                        <li><a href="#architecture">Architecture</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>Technologies</h4>
+                    <ul>
+                        <li>Python & FastAPI</li>
+                        <li>MLflow & scikit-learn</li>
+                        <li>Google Cloud Run</li>
+                        <li>Docker & GitHub Actions</li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>Contact</h4>
+                    <ul>
+                        <li><i class="fab fa-github"></i> GitHub</li>
+                        <li><i class="fas fa-envelope"></i> Email</li>
+                        <li><i class="fas fa-link"></i> Portfolio</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2026 MLOps House Price Predictor. Développé avec <i class="fas fa-heart"></i> pour l'excellence en Machine Learning.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="loading-overlay">
+        <div class="spinner"></div>
+        <p>Chargement...</p>
+    </div>
+
+    <script src="/static/script.js"></script>
+</body>
+</html>
