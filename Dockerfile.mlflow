@@ -3,9 +3,9 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
-# Installer MLflow et dépendances
+# Installer MLflow 3.8.1 et dépendances
 RUN pip install --no-cache-dir \
-    mlflow==2.9.2 \
+    mlflow==3.8.1 \
     google-cloud-storage \
     psycopg2-binary \
     gunicorn
