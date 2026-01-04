@@ -1,7 +1,7 @@
 name: MLOps Pipeline - House Prices
 
 on:
-  # Trigger on CSV file push to master branch
+  # Trigger on push to master branch
   push:
     branches:
       - master
@@ -10,6 +10,10 @@ on:
       - 'pipeline.py'
       - 'requirements.txt'
       - '.github/workflows/mlops-pipeline.yml'
+      - 'Dockerfile'
+      - 'app.py'
+      - 'train_simple_model.py'
+      - 'static/**'
   
   # Manual trigger via GitHub UI
   workflow_dispatch:
