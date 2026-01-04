@@ -386,14 +386,20 @@ def generate_report(data_validation: dict, comparison_df: pd.DataFrame,
         'pipeline_status': 'SUCCESS'
     }
     
-    # Save report
+    # Save report in output_path
     report_path = os.path.join(output_path, 'pipeline_report.json')
     os.makedirs(output_path, exist_ok=True)
     
     with open(report_path, 'w') as f:
         json.dump(report, f, indent=2)
     
+    # Also save report at root level for GitHub Actions
+    root_report_path = 'pipeline_report.json'
+    with open(root_report_path, 'w') as f:
+        json.dump(report, f, indent=2)
+    
     logger.info(f"✅ Report saved to {report_path}")
+    logger.info(f"✅ Report also saved to {root_report_path}")
     return report
 
 
