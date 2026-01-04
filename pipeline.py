@@ -336,11 +336,19 @@ def log_models_to_mlflow(trained_models, all_metrics, best_model_name):
             else:
                 mlflow.set_tag('status', 'archived')
             
-            # Log model
-            if model_name == 'XGBoost':
-                mlflow.xgboost.log_model(model, 'model')
-            else:
-                mlflow.sklearn.log_model(model, 'model')
+            # Log model - use sklearn for all models (more compatible)
+            try:
+                if model_name == 'XGBoost':
+                    # Try xgboost flavor first, fallback to sklearn
+                    try:
+                        mlflow.xgboost.log_model(model, 'model')
+                    except TypeError:
+                        # Fallback for XGBoost compatibility issues
+                        mlflow.sklearn.log_model(model, 'model')
+                else:
+                    mlflow.sklearn.log_model(model, 'model')
+            except Exception as e:
+                logger.warning(f"⚠️ Could not log model artifact: {e}")
             
             # Store run ID
             run_ids[model_name] = mlflow.active_run().info.run_id
