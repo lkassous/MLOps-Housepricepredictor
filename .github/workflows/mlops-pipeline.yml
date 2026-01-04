@@ -44,8 +44,15 @@ jobs:
       
       # 4. Run MLOps Pipeline
       - name: Run MLOps Pipeline
+        env:
+          MLFLOW_TRACKING_URI: ${{ secrets.MLFLOW_TRACKING_URI }}
         run: |
           echo "🚀 Starting MLOps Pipeline..."
+          if [ -n "$MLFLOW_TRACKING_URI" ]; then
+            echo "📡 Using remote MLflow server: $MLFLOW_TRACKING_URI"
+          else
+            echo "📁 Using local MLflow storage"
+          fi
           python pipeline.py --data-path train.csv --output-path ./mlruns
           echo "✅ Pipeline completed successfully"
       

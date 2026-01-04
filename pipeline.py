@@ -287,8 +287,10 @@ def log_models_to_mlflow(trained_models, all_metrics, best_model_name):
     logger.info("LOGGING TO MLFLOW")
     logger.info("="*70)
     
-    # Setup MLflow
-    mlflow.set_tracking_uri("./mlruns")
+    # Setup MLflow - use environment variable or default to local
+    tracking_uri = os.getenv("MLFLOW_TRACKING_URI", "./mlruns")
+    mlflow.set_tracking_uri(tracking_uri)
+    logger.info(f"📡 MLflow Tracking URI: {tracking_uri}")
     
     # Create or get experiment
     try:
