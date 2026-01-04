@@ -1,14 +1,14 @@
 """
-Script minimal pour entraîner un modèle XGBoost et le sauvegarder localement
+Script minimal pour entraîner les modèles et les sauvegarder localement
+Utilise les mêmes 3 modèles que pipeline.py: LinearRegression, RandomForest, XGBoost
 """
 import pandas as pd
 import numpy as np
 from sklearn.preprocessing import LabelEncoder
 from sklearn.model_selection import cross_val_score
+from sklearn.linear_model import LinearRegression
+from sklearn.ensemble import RandomForestRegressor
 from xgboost import XGBRegressor
-from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor
-import mlflow
-import mlflow.sklearn
 import pickle
 import os
 import json
@@ -39,29 +39,21 @@ for col in categorical_cols:
 
 print("🔄 Entraînement et comparaison de 3 modèles...")
 
-# Définir les modèles à comparer
+# Définir les mêmes 3 modèles que pipeline.py
 models = {
+    'LinearRegression': LinearRegression(),
+    'RandomForest': RandomForestRegressor(
+        n_estimators=100,
+        max_depth=10,
+        random_state=42,
+        n_jobs=-1
+    ),
     'XGBoost': XGBRegressor(
         n_estimators=300,
         max_depth=3,
         learning_rate=0.1,
-        subsample=1.0,
-        colsample_bytree=0.8,
         random_state=42,
         objective='reg:squarederror'
-    ),
-    'RandomForest': RandomForestRegressor(
-        n_estimators=200,
-        max_depth=15,
-        min_samples_split=5,
-        random_state=42,
-        n_jobs=-1
-    ),
-    'GradientBoosting': GradientBoostingRegressor(
-        n_estimators=200,
-        max_depth=4,
-        learning_rate=0.1,
-        random_state=42
     )
 }
 
