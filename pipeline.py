@@ -304,7 +304,12 @@ def log_models_to_mlflow(trained_models, all_metrics, best_model_name):
     # Log each model
     run_ids = {}
     for model_name, model in trained_models.items():
-        with mlflow.start_run(run_name=model_name):
+        is_best = (model_name == best_model_name)
+        
+        # Create descriptive run name
+        run_name = f"🏆 {model_name} (BEST)" if is_best else model_name
+        
+        with mlflow.start_run(run_name=run_name):
             # Log metrics
             for metric_name, value in all_metrics[model_name].items():
                 mlflow.log_metric(metric_name, value)
@@ -313,6 +318,23 @@ def log_models_to_mlflow(trained_models, all_metrics, best_model_name):
             mlflow.log_param('model_name', model_name)
             mlflow.log_param('test_size', TEST_SIZE)
             mlflow.log_param('random_state', RANDOM_STATE)
+            
+            # Add tags to identify the best model
+            mlflow.set_tag('model_type', model_name)
+            mlflow.set_tag('is_best_model', str(is_best))
+            mlflow.set_tag('pipeline_run', datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
+            
+            if is_best:
+                mlflow.set_tag('status', 'production_candidate')
+                mlflow.set_tag('selected_for_deployment', 'true')
+                logger.info(f"\n{'='*70}")
+                logger.info(f"🏆 BEST MODEL SELECTED: {model_name}")
+                logger.info(f"   Test RMSE: ${all_metrics[model_name]['test_rmse']:,.2f}")
+                logger.info(f"   Test R²: {all_metrics[model_name]['test_r2']:.4f}")
+                logger.info(f"   CV R² (mean ± std): {all_metrics[model_name]['cv_mean']:.4f} ± {all_metrics[model_name]['cv_std']:.4f}")
+                logger.info(f"{'='*70}\n")
+            else:
+                mlflow.set_tag('status', 'archived')
             
             # Log model
             if model_name == 'XGBoost':
@@ -323,7 +345,8 @@ def log_models_to_mlflow(trained_models, all_metrics, best_model_name):
             # Store run ID
             run_ids[model_name] = mlflow.active_run().info.run_id
             
-            logger.info(f"✅ Logged {model_name} to MLflow")
+            status_emoji = "🏆" if is_best else "📊"
+            logger.info(f"{status_emoji} Logged {model_name} to MLflow (Run ID: {run_ids[model_name][:8]}...)")
     
     return run_ids, experiment_id
 
@@ -331,19 +354,39 @@ def log_models_to_mlflow(trained_models, all_metrics, best_model_name):
 def promote_best_model_to_production(best_model_name: str, run_ids: dict):
     """Register and promote best model to production."""
     logger.info("\n" + "="*70)
-    logger.info("PROMOTING BEST MODEL TO PRODUCTION")
+    logger.info("🚀 PROMOTING BEST MODEL TO PRODUCTION")
     logger.info("="*70)
     
     client = MlflowClient()
     best_run_id = run_ids[best_model_name]
     model_uri = f"runs:/{best_run_id}/model"
     
+    logger.info(f"\n📌 Selected Model: {best_model_name}")
+    logger.info(f"📌 Run ID: {best_run_id}")
+    logger.info(f"📌 Model URI: {model_uri}\n")
+    
     try:
         # Register model
         result = mlflow.register_model(model_uri, MODEL_REGISTRY_NAME)
-        logger.info(f"✅ Model registered: {MODEL_REGISTRY_NAME}")
+        logger.info(f"\n✅ MODEL REGISTERED SUCCESSFULLY")
+        logger.info(f"   Registry Name: {MODEL_REGISTRY_NAME}")
         logger.info(f"   Version: {result.version}")
+        logger.info(f"   Model Type: {best_model_name}")
         logger.info(f"   Run ID: {best_run_id}")
+        
+        # Update model description
+        try:
+            client.update_registered_model(
+                name=MODEL_REGISTRY_NAME,
+                description=f"Production model for house price prediction. Current: {best_model_name} (v{result.version})"
+            )
+            client.update_model_version(
+                name=MODEL_REGISTRY_NAME,
+                version=result.version,
+                description=f"Best model selected by pipeline: {best_model_name} - {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
+            )
+        except Exception as e:
+            logger.debug(f"Could not update descriptions: {e}")
         
         # Set alias to production
         try:
@@ -352,7 +395,10 @@ def promote_best_model_to_production(best_model_name: str, run_ids: dict):
                 alias="production",
                 version=result.version
             )
-            logger.info(f"✅ Alias 'production' set to version {result.version}")
+            logger.info(f"\n🎯 Production alias set to version {result.version}")
+            logger.info(f"\n{'='*70}")
+            logger.info(f"✨ {best_model_name} is now in PRODUCTION")
+            logger.info(f"{'='*70}\n")
         except:
             # Fallback for older MLflow versions
             logger.info(f"⚠️ Could not set alias (older MLflow version)")
