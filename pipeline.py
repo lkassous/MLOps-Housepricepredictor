@@ -367,6 +367,23 @@ def promote_best_model_to_production(best_model_name: str, run_ids: dict):
 # REPORTING
 # ============================================================================
 
+def convert_to_serializable(obj):
+    """Convert numpy types to Python native types for JSON serialization."""
+    if isinstance(obj, dict):
+        return {k: convert_to_serializable(v) for k, v in obj.items()}
+    elif isinstance(obj, list):
+        return [convert_to_serializable(i) for i in obj]
+    elif isinstance(obj, np.integer):
+        return int(obj)
+    elif isinstance(obj, np.floating):
+        return float(obj)
+    elif isinstance(obj, np.ndarray):
+        return obj.tolist()
+    elif pd.isna(obj):
+        return None
+    else:
+        return obj
+
 def generate_report(data_validation: dict, comparison_df: pd.DataFrame, 
                    best_model: str, output_path: str):
     """Generate pipeline execution report."""
@@ -377,12 +394,12 @@ def generate_report(data_validation: dict, comparison_df: pd.DataFrame,
     report = {
         'timestamp': datetime.now().isoformat(),
         'data_quality': {
-            'total_rows': data_validation['total_rows'],
-            'total_columns': data_validation['total_columns'],
-            'duplicates': data_validation['duplicates']
+            'total_rows': int(data_validation['total_rows']),
+            'total_columns': int(data_validation['total_columns']),
+            'duplicates': int(data_validation['duplicates'])
         },
         'best_model': best_model,
-        'model_metrics': comparison_df.to_dict(orient='index'),
+        'model_metrics': convert_to_serializable(comparison_df.to_dict(orient='index')),
         'pipeline_status': 'SUCCESS'
     }
     
