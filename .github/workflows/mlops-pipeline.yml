@@ -89,15 +89,15 @@ jobs:
         with:
           project_id: ${{ secrets.GCP_PROJECT_ID }}
       
-      # 10. Create Artifact Registry repository if not exists
-      - name: Create Artifact Registry repository
+      # 10. Verify Artifact Registry repository exists
+      - name: Verify Artifact Registry repository
         if: success()
         run: |
-          gcloud artifacts repositories describe docker-repo --location=us-central1 2>/dev/null || \
-          gcloud artifacts repositories create docker-repo \
-            --repository-format=docker \
+          echo "Checking docker-repo in Artifact Registry..."
+          gcloud artifacts repositories describe docker-repo \
             --location=us-central1 \
-            --description="Docker repository for house prices API"
+            --project=${{ secrets.GCP_PROJECT_ID }}
+          echo "✅ Repository verified"
       
       # 11. Configure Docker for Artifact Registry
       - name: Configure Docker for Artifact Registry
