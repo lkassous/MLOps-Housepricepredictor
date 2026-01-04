@@ -89,35 +89,47 @@ jobs:
         with:
           project_id: ${{ secrets.GCP_PROJECT_ID }}
       
-      # 10. Configure Docker for GCR
-      - name: Configure Docker for GCR
+      # 10. Create Artifact Registry repository if not exists
+      - name: Create Artifact Registry repository
         if: success()
         run: |
-          gcloud auth configure-docker gcr.io
+          gcloud artifacts repositories describe docker-repo --location=us-central1 2>/dev/null || \
+          gcloud artifacts repositories create docker-repo \
+            --repository-format=docker \
+            --location=us-central1 \
+            --description="Docker repository for house prices API"
       
-      # 11. Build and push Docker image
+      # 11. Configure Docker for Artifact Registry
+      - name: Configure Docker for Artifact Registry
+        if: success()
+        run: |
+          gcloud auth configure-docker us-central1-docker.pkg.dev
+      
+      # 12. Build and push Docker image
       - name: Build and push Docker image
         if: success()
         run: |
-          IMAGE_NAME="gcr.io/${{ secrets.GCP_PROJECT_ID }}/house-prices-api:latest"
-          IMAGE_TAG="gcr.io/${{ secrets.GCP_PROJECT_ID }}/house-prices-api:$(date +%s)"
+          REGISTRY="us-central1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/docker-repo"
+          IMAGE_NAME="${REGISTRY}/house-prices-api:latest"
+          IMAGE_TAG="${REGISTRY}/house-prices-api:$(date +%s)"
           
           echo "🐳 Building Docker image..."
           docker build -t $IMAGE_NAME -t $IMAGE_TAG .
           
-          echo "📤 Pushing to Google Container Registry..."
+          echo "📤 Pushing to Artifact Registry..."
           docker push $IMAGE_NAME
           docker push $IMAGE_TAG
           
           echo "✅ Docker image pushed: $IMAGE_NAME"
       
-      # 12. Deploy to Cloud Run
+      # 13. Deploy to Cloud Run
       - name: Deploy to Cloud Run
         if: success()
         run: |
           SERVICE_NAME="house-prices-predictor"
           REGION="us-central1"
-          IMAGE_URL="gcr.io/${{ secrets.GCP_PROJECT_ID }}/house-prices-api:latest"
+          REGISTRY="us-central1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/docker-repo"
+          IMAGE_URL="${REGISTRY}/house-prices-api:latest"
           
           echo "🚀 Deploying to Cloud Run..."
           gcloud run deploy $SERVICE_NAME \
